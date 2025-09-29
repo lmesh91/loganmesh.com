@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=TASA+Explorer:wght@400..800&display=swap');
+
+.main {
+    font-family: "TASA Explorer", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+    color: white;
+    position: relative;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+h1 {
+    font-size: 3em;
+    background-image: linear-gradient(to right, rgb(143, 237, 217), rgb(198, 215, 239));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+p {
+    font-size: 1.5em;
+    background-image: linear-gradient(to right, rgb(143, 237, 217), rgb(198, 215, 239));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+
+#background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
