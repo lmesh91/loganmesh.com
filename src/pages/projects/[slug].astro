@@ -1,0 +1,38 @@
+---
+import { getCollection, render } from "astro:content";
+import TerminalArticle from "../../components/TerminalArticle.astro";
+import TerminalWindow from "../../components/TerminalWindow.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("projects", ({ data }) => import.meta.env.DEV || !data.draft);
+  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const publicReady = import.meta.env.SITE_PUBLIC_READY === "true";
+const title = `${entry.data.title} // loganmesh.com`;
+const description = entry.data.description;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    {!publicReady && <meta name="robots" content="noindex,nofollow" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <TerminalWindow title={`guest@loganmesh:~/site/projects/${entry.slug}.md`}>
+      <TerminalArticle command={`projectctl inspect ${entry.slug}`} collection="projects" slug={entry.slug}>
+        <Content />
+      </TerminalArticle>
+    </TerminalWindow>
+  </body>
+</html>

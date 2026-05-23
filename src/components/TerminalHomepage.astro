@@ -1,0 +1,36 @@
+---
+import TerminalWindow from "./TerminalWindow.astro";
+
+type TerminalItem = {
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  draft: boolean;
+  date?: string;
+  status?: string;
+  featured?: boolean;
+  url: string;
+  type: "blog" | "project";
+};
+
+interface Props {
+  blog: TerminalItem[];
+  projects: TerminalItem[];
+}
+
+const data = {
+  blog: Astro.props.blog,
+  projects: Astro.props.projects,
+};
+
+const json = JSON.stringify(data).replaceAll("<", "\\u003c");
+---
+
+<TerminalWindow title="guest@loganmesh:~/site">
+  <div id="screen" class="screen" aria-live="polite" tabindex="0"></div>
+  <script id="terminal-data" type="application/json" is:inline set:html={json}></script>
+  <script>
+    import "../scripts/terminal.ts";
+  </script>
+</TerminalWindow>

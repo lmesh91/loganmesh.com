@@ -1,0 +1,30 @@
+---
+import TerminalPrompt from "./TerminalPrompt.astro";
+
+interface Props {
+  command: string;
+  collection: "blog" | "projects";
+  slug: string;
+}
+
+const { command, collection, slug } = Astro.props;
+const listCommand = collection === "blog" ? "blog" : "projects";
+---
+
+<div class="screen">
+  <TerminalPrompt command={command} />
+  <div class="line dim"># rendering markdown transcript for {collection}/{slug}.md</div>
+  <div class="blank"></div>
+  <article class="terminal-article">
+    <slot />
+  </article>
+  <div class="blank"></div>
+  <div class="line green">navigation:</div>
+  <div class="line">
+    <a class="terminal-link" href="/">home</a>
+    {"  "}
+    <a class="terminal-link" href={`/?cmd=${listCommand}`}>{listCommand}</a>
+    {"  "}
+    <a class="terminal-link" href={`/?cmd=open ${slug}`}>open {slug}</a>
+  </div>
+</div>
