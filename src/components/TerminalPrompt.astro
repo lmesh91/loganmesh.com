@@ -1,0 +1,12 @@
+---
+interface Props {
+  cwd?: string;
+  command: string;
+}
+
+const { cwd = "~/site", command } = Astro.props;
+---
+
+<div class="line input-line">
+  <span class="prompt">guest@loganmesh</span><span>:<span class="cwd">{cwd}</span>$&nbsp;</span><span class="cmdtext">{command}</span>
+</div>

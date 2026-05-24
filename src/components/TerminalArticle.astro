@@ -1,0 +1,74 @@
+---
+import TerminalPrompt from "./TerminalPrompt.astro";
+
+interface Props {
+  command: string;
+  collection: "blog" | "projects";
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  date?: string;
+  status?: string;
+  featured?: boolean;
+  terminalData: {
+    blog: unknown[];
+    projects: unknown[];
+  };
+}
+
+const {
+  command,
+  collection,
+  slug,
+  title,
+  description,
+  tags,
+  date,
+  status,
+  featured,
+  terminalData,
+} = Astro.props;
+const listCommand = collection === "blog" ? "blog" : "projects";
+const openCommand = `open ${slug}`;
+const dataJson = JSON.stringify(terminalData).replaceAll("<", "\\u003c");
+---
+
+<div class="screen article-screen">
+  <TerminalPrompt command={openCommand} />
+  <div class="line"><span class="green">opened</span> {collection}/{slug}.md</div>
+  <div class="blank"></div>
+
+  <article class="terminal-article">
+    <slot />
+  </article>
+
+  <div class="blank"></div>
+  <TerminalPrompt command={command} />
+  <div class="line"><span class="cyan">title:</span>       {title}</div>
+  <div class="line"><span class="cyan">path:</span>        {collection}/{slug}.md</div>
+  {date && <div class="line"><span class="cyan">date:</span>        {date}</div>}
+  {status && <div class="line"><span class="cyan">status:</span>      {status}</div>}
+  {typeof featured === "boolean" && <div class="line"><span class="cyan">featured:</span>    {featured ? "true" : "false"}</div>}
+  <div class="line"><span class="cyan">tags:</span>        {tags.length ? tags.join(", ") : "none"}</div>
+  <div class="line"><span class="cyan">description:</span> {description}</div>
+  <div class="blank"></div>
+  <div class="line green">navigation:</div>
+  <div class="line">
+    <a class="terminal-link" href="/">home</a>
+    {"  "}
+    <a class="terminal-link" href={`/?cmd=${listCommand}`}>{listCommand}</a>
+    {"  "}
+    <a class="terminal-link" href={`/${collection}/${slug}/`}>permalink</a>
+  </div>
+  <div class="blank"></div>
+  <div id="screen" class="article-terminal-output" data-default-command="" data-defer-init="true" data-quiet-init="true">
+    <div class="line input-line inert-prompt">
+      <span class="prompt">guest@loganmesh</span><span>:<span class="cwd">~/site</span>$&nbsp;</span>
+    </div>
+  </div>
+  <script id="terminal-data" type="application/json" is:inline set:html={dataJson}></script>
+  <script>
+    import "../scripts/terminal.ts";
+  </script>
+</div>

@@ -1,0 +1,40 @@
+---
+import "../styles/terminal.css";
+
+interface Props {
+  title?: string;
+}
+
+const {
+  title = "guest@loganmesh:~/site",
+} = Astro.props;
+---
+
+<div class="shell">
+  <div class="topline">
+    <span><b>loganmesh.com</b></span>
+    <span>
+      contact: <a href="mailto:loganmesh91@gmail.com">loganmesh91@gmail.com</a>
+      // github: <a href="https://github.com/lmesh91" rel="me noreferrer">@lmesh91</a>
+      // linkedin: <a href="https://www.linkedin.com/in/lmesh/" rel="me noreferrer">/in/lmesh</a>
+    </span>
+  </div>
+
+  <section class="window" aria-label="Terminal window">
+    <div class="titlebar">
+      <div class="lights" aria-hidden="true">
+        <span class="light red"></span>
+        <span class="light yellow"></span>
+        <span class="light green"></span>
+      </div>
+      <span class="path">{title}</span>
+    </div>
+
+    <slot />
+  </section>
+
+  <footer class="footer">
+    <span class="desktop-tip">Tip: use ↑/↓ for command history.</span>
+    <span class="mobile-tip">Tip: tap terminal commands.</span>
+  </footer>
+</div>

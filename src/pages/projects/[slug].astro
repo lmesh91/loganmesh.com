@@ -1,0 +1,79 @@
+---
+import { getCollection, render } from "astro:content";
+import TerminalArticle from "../../components/TerminalArticle.astro";
+import TerminalWindow from "../../components/TerminalWindow.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("projects", ({ data }) => import.meta.env.DEV || !data.draft);
+  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const publicReady = import.meta.env.SITE_PUBLIC_READY === "true";
+const title = `${entry.data.title} // loganmesh.com`;
+const description = entry.data.description;
+const [blogEntries, projectEntries] = await Promise.all([
+  getCollection("blog", ({ data }) => import.meta.env.DEV || !data.draft),
+  getCollection("projects", ({ data }) => import.meta.env.DEV || !data.draft),
+]);
+const terminalData = {
+  blog: blogEntries
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+    .map((item) => ({
+      slug: item.slug,
+      title: item.data.title,
+      description: item.data.description,
+      tags: item.data.tags,
+      draft: item.data.draft,
+      date: item.data.date.toISOString().slice(0, 10),
+      url: `/blog/${item.slug}/`,
+      type: "blog",
+    })),
+  projects: projectEntries
+    .sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || a.data.title.localeCompare(b.data.title))
+    .map((item) => ({
+      slug: item.slug,
+      title: item.data.title,
+      description: item.data.description,
+      tags: item.data.tags,
+      draft: item.data.draft,
+      status: item.data.status,
+      featured: item.data.featured,
+      url: `/projects/${item.slug}/`,
+      type: "project",
+    })),
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    {!publicReady && <meta name="robots" content="noindex,nofollow" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <TerminalWindow title={`guest@loganmesh:~/site/projects/${entry.slug}.md`}>
+      <TerminalArticle
+        command={`projectctl inspect ${entry.slug}`}
+        collection="projects"
+        slug={entry.slug}
+        title={entry.data.title}
+        description={entry.data.description}
+        tags={entry.data.tags}
+        status={entry.data.status}
+        featured={entry.data.featured}
+        terminalData={terminalData}
+      >
+        <Content />
+      </TerminalArticle>
+    </TerminalWindow>
+  </body>
+</html>
