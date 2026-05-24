@@ -3,12 +3,10 @@ import "../styles/terminal.css";
 
 interface Props {
   title?: string;
-  tip?: string;
 }
 
 const {
   title = "guest@loganmesh:~/site",
-  tip = "Tip: use ↑/↓ for command history. On mobile, tap terminal commands directly.",
 } = Astro.props;
 ---
 
@@ -35,5 +33,8 @@ const {
     <slot />
   </section>
 
-  <footer class="footer">{tip}</footer>
+  <footer class="footer">
+    <span class="desktop-tip">Tip: use ↑/↓ for command history.</span>
+    <span class="mobile-tip">Tip: tap terminal commands.</span>
+  </footer>
 </div>

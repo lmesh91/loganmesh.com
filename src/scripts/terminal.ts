@@ -30,35 +30,11 @@ const terminalData = JSON.parse(dataEl.textContent) as TerminalData;
 
 let commandHistory: string[] = [];
 let historyIndex = -1;
-let booting = false;
 let activeInput: HTMLElement | null = null;
 
 const state = {
   cwd: "~/site",
 };
-
-const logo = `░██                                                        ░███     ░███                       ░██        
-░██                                                        ░████   ░████                       ░██        
-░██          ░███████   ░████████  ░██████   ░████████     ░██░██ ░██░██  ░███████   ░███████  ░████████  
-░██         ░██    ░██ ░██    ░██       ░██  ░██    ░██    ░██ ░████ ░██ ░██    ░██ ░██        ░██    ░██ 
-░██         ░██    ░██ ░██    ░██  ░███████  ░██    ░██    ░██  ░██  ░██ ░█████████  ░███████  ░██    ░██ 
-░██         ░██    ░██ ░██   ░███ ░██   ░██  ░██    ░██    ░██       ░██ ░██               ░██ ░██    ░██ 
-░██████████  ░███████   ░█████░██  ░█████░██ ░██    ░██    ░██       ░██  ░███████   ░███████  ░██    ░██ 
-                              ░██                                                                         
-                        ░███████                                                                          
-                                                                                                          `;
-
-const bootLines = [
-  { text: "loganmesh kernel 0.1.0-terminal #1 SMP static-site", cls: "green", delay: 80 },
-  { text: "Command line: root=/dev/site theme=terminal interactive=1 cards=0 inputbar=0", cls: "dim", delay: 90 },
-  { text: "[    0.000000] boot: initializing loganmesh.com", cls: "", delay: 95 },
-  { text: "[    0.041112] font: Departure Mono requested; local webfont hook checked", cls: "", delay: 80 },
-  { text: "[    0.083821] content: loading markdown collections blog, projects", cls: "", delay: 75 },
-  { text: "[    0.121449] input: inline editable shell prompt attached", cls: "", delay: 80 },
-  { text: "[    0.160700] mobile: clickable terminal commands enabled", cls: "", delay: 90 },
-  { text: "[    0.211004] robots: noindex until SITE_PUBLIC_READY=true", cls: "", delay: 70 },
-  { text: "[    0.287110] status: ready", cls: "green", delay: 110 },
-];
 
 function escapeHTML(value: string): string {
   return String(value)
@@ -89,15 +65,6 @@ function line(text = "", cls = ""): HTMLElement {
   return div;
 }
 
-function pre(text = "", cls = ""): HTMLElement {
-  const el = document.createElement("pre");
-  el.className = `ascii-logo ${cls}`;
-  el.textContent = text;
-  terminalScreen.appendChild(el);
-  scrollBottom();
-  return el;
-}
-
 function blank(): void {
   const div = document.createElement("div");
   div.className = "blank";
@@ -109,12 +76,8 @@ function scrollBottom(): void {
   terminalScreen.scrollTop = terminalScreen.scrollHeight;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
 function focusInput(): void {
-  if (!activeInput || booting) return;
+  if (!activeInput) return;
   activeInput.focus({ preventScroll: true });
   placeCaretEnd(activeInput);
 }
@@ -166,34 +129,21 @@ function freezePrompt(commandText: string): void {
   activeInput = null;
 }
 
-async function bootSequence(): Promise<void> {
-  booting = true;
-  if (activeInput) activeInput.setAttribute("contenteditable", "false");
+function resetTerminal(command?: string): void {
   terminalScreen.innerHTML = "";
   activeInput = null;
-
-  for (const row of bootLines) {
-    await sleep(row.delay);
-    line(escapeHTML(row.text), row.cls);
-  }
-
-  blank();
-  pre(logo, "green");
-
-  await sleep(120);
   line("Welcome to loganmesh.com.", "green");
-  line(`Type ${color("help", "cyan")} or tap a command below.`, "dim");
-  renderCommandPalette();
+  line(`Type ${cmdButton("help")} or tap a command below.`, "dim");
   blank();
-
-  booting = false;
   appendPrompt();
+  const commandToRun = command || "about";
+  setCurrentCommand(commandToRun);
+  executeCommand(commandToRun);
+}
 
-  const initialCommand = new URLSearchParams(window.location.search).get("cmd");
-  if (initialCommand) {
-    setCurrentCommand(initialCommand);
-    executeCommand(initialCommand);
-  }
+function initializeTerminal(): void {
+  const initialCommand = new URLSearchParams(window.location.search).get("cmd") || undefined;
+  resetTerminal(initialCommand);
 }
 
 function renderCommandPalette(): void {
@@ -205,7 +155,6 @@ function renderCommandPalette(): void {
       cmdButton("projects"),
       cmdButton("blog"),
       cmdButton("contact"),
-      cmdButton("uname"),
       cmdButton("clear"),
       cmdButton("reboot"),
     ].join("  "),
@@ -219,14 +168,12 @@ function help(): void {
   wrapper.className = "command-list";
   const rows = [
     ["help", "show this command list"],
-    ["about", "print public identity placeholder"],
-    ["projects", "list project markdown entries"],
-    ["blog", "list blog markdown entries"],
-    ["open project-alpha", "preview a project or blog slug"],
+    ["about", "print a message about myself"],
+    ["projects", "list project entries"],
+    ["blog", "list blog post entries"],
+    ["open [project]", "preview a project or blog post"],
     ["contact", "show contact links"],
-    ["uname", "print site kernel"],
     ["clear", "clear terminal"],
-    ["reboot", "replay boot sequence"],
   ];
 
   for (const [cmd, desc] of rows) {
@@ -247,14 +194,38 @@ function help(): void {
 }
 
 function about(): void {
-  [
-    ["name", "Logan Mesh"],
-    ["site", "loganmesh.com"],
-    ["summary", "Placeholder intro. Replace this with a compact statement of what you build, study, and write about."],
-    ["status", "preview-only static site; deployment intentionally disabled"],
-  ].forEach(([key, value]) => {
-    line(`${color(key.padEnd(10), "cyan")}${escapeHTML(value)}`);
-  });
+  line(`${color("#", "faint")} ${color("Logan Mesh", "yellow")}`);
+  line(`${color("role", "cyan")}         Incoming SWE Intern @ ${color("Bloomberg", "white")} | Math + CS @ ${color("UF", "orange")}`);
+  line(`${color("interests", "cyan")}    Software engineering, quant dev & research, mathematics`);
+  line(`${color("contact", "cyan")}      ${link("mailto:loganmesh91@gmail.com", "loganmesh91@gmail.com")}  ${link("https://github.com/lmesh91", "github.com/lmesh91")}  ${link("https://www.linkedin.com/in/lmesh/", "linkedin.com/in/lmesh")}`);
+  line("");
+
+  line(`${color("##", "faint")} ${color("Summary", "yellow")}`);
+  line("I am a sophomore seeking a math and computer science degree at the University of Florida.");
+  line("I love working on interesting problems at the intersection of math, computing, and/or finance.");
+  line("");
+
+  line(`${color("##", "faint")} ${color("Education", "yellow")}`);
+  line(`${color("University of Florida", "cyan")}  Class of 2029, Math + CS double major`);
+  line(`${color("Honors", "cyan")}                 4.0 GPA, Dean's List, President's Honor Roll`);
+  line("");
+
+  line(`${color("##", "faint")} ${color("Experience", "yellow")}`);
+  line(`${color("Bloomberg", "cyan")}              Software Engineering Intern, New York City`);
+  line("Professional software engineering in a high-throughput financial technology environment.");
+  line("");
+
+  line(`${color("##", "faint")} ${color("Awards", "yellow")}`);
+  line(`${color("Putnam", "cyan")}                 24 / 120, top 14% of participants`);
+  line(`${color("SCUDEM X", "cyan")}               Outstanding Prize Winner team`);
+  line(`${color("M3 Challenge", "cyan")}           Semifinalist team, top 2% of 655 US/UK teams`);
+  line("");
+
+  line(`${color("##", "faint")} ${color("Projects", "yellow")}`);
+  line(`${link("/projects/leantex", "LeanTeX")}                Convert proofs written in Lean 4 to natural language.`);
+  line("");
+
+  line(`${color("See more:", "green")}  ${cmdButton("projects")}  ${cmdButton("blog")}  ${cmdButton("contact")}`);
 }
 
 function projects(): void {
@@ -269,7 +240,7 @@ function projects(): void {
     line(`${cmdButton(`open ${item.slug}`, item.slug.padEnd(21))}${escapeHTML((item.status ?? "unknown").padEnd(12))}${escapeHTML(item.title)}`);
   });
   line("");
-  line(`Tap a slug or type ${color(`open ${entries[0].slug}`, "cyan")}.`, "dim");
+  line(`Tap a slug or type ${cmdButton(`open ${entries[0].slug}`)}.`, "dim");
 }
 
 function blog(): void {
@@ -284,7 +255,7 @@ function blog(): void {
     line(`${escapeHTML(item.date ?? "undated")}  ${cmdButton(`open ${item.slug}`, item.slug.padEnd(21))}${escapeHTML(item.title)}`);
   });
   line("");
-  line(`Tap a slug or type ${color(`open ${entries[0].slug}`, "cyan")}.`, "dim");
+  line(`Tap a slug or type ${cmdButton(`open ${entries[0].slug}`)}.`, "dim");
 }
 
 function findEntry(slug: string): TerminalItem | undefined {
@@ -322,7 +293,6 @@ function unknown(cmd: string): void {
 }
 
 function executeCommand(raw: string): void {
-  if (booting) return;
   const cmd = raw.trim();
   if (!cmd) {
     freezePrompt("");
@@ -353,17 +323,11 @@ function executeCommand(raw: string): void {
     case "contact":
       contact();
       break;
-    case "uname":
-      line("loganmesh 0.1.0-terminal astro-static interactive x86_64");
-      break;
     case "clear":
       terminalScreen.innerHTML = "";
       activeInput = null;
       renderCommandPalette();
       break;
-    case "reboot":
-      void bootSequence();
-      return;
     case "open":
       openEntry(parts[1] ?? "");
       break;
@@ -376,7 +340,6 @@ function executeCommand(raw: string): void {
 }
 
 function runClickedCommand(cmd: string): void {
-  if (booting) return;
   if (!activeInput) appendPrompt();
   setCurrentCommand(cmd);
   executeCommand(cmd);
@@ -417,10 +380,10 @@ document.addEventListener("click", (e) => {
 });
 
 terminalScreen.addEventListener("keydown", (e: KeyboardEvent) => {
-  if (!activeInput || document.activeElement === activeInput || booting) return;
+  if (!activeInput || document.activeElement === activeInput) return;
   if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter") {
     focusInput();
   }
 });
 
-void bootSequence();
+initializeTerminal();

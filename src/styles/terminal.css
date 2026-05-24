@@ -286,6 +286,10 @@ a:hover {
   text-overflow: ellipsis;
 }
 
+.mobile-tip {
+  display: none;
+}
+
 kbd {
   border: 1px solid var(--faint);
   color: var(--yellow);
@@ -301,7 +305,9 @@ kbd {
 .terminal-article h1,
 .terminal-article h2,
 .terminal-article h3,
-.terminal-article h4 {
+.terminal-article h4,
+.terminal-article h5,
+.terminal-article h6 {
   color: var(--yellow);
   font-size: 1em;
   font-weight: 400;
@@ -311,6 +317,9 @@ kbd {
 .terminal-article h1::before { content: "# "; color: var(--faint); }
 .terminal-article h2::before { content: "## "; color: var(--faint); }
 .terminal-article h3::before { content: "### "; color: var(--faint); }
+.terminal-article h4::before { content: "#### "; color: var(--faint); }
+.terminal-article h5::before { content: "##### "; color: var(--faint); }
+.terminal-article h6::before { content: "###### "; color: var(--faint); }
 
 .terminal-article p,
 .terminal-article ul,
@@ -335,6 +344,9 @@ kbd {
   background: #03140f;
   border: 1px solid var(--faint);
   padding: 0 .2em;
+  font-family: "Departure Mono Local", "Departure Mono", "DepartureMono",
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 }
 
 .terminal-article pre {
@@ -409,5 +421,13 @@ kbd {
 
   .footer {
     font-size: 10px;
+  }
+
+  .desktop-tip {
+    display: none;
+  }
+
+  .mobile-tip {
+    display: inline;
   }
 }
