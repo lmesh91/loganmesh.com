@@ -368,6 +368,15 @@ kbd {
   color: var(--dim);
 }
 
+.terminal-article img {
+  display: block;
+  width: min(100%, 720px);
+  max-height: 420px;
+  height: auto;
+  object-fit: contain;
+  margin: 1rem 0;
+}
+
 .terminal-article .katex {
   color: var(--strong);
   font-size: 1em;
@@ -413,6 +422,12 @@ kbd {
   .screen div,
   .terminal-article {
     font-size: 12px;
+  }
+
+  .terminal-article img {
+    width: min(100%, 320px);
+    max-height: 220px;
+    margin: .75rem 0;
   }
 
   .ascii-logo {

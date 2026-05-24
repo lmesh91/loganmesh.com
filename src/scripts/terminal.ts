@@ -37,6 +37,10 @@ const state = {
   cwd: "~/site",
 };
 
+function isMobileTerminal(): boolean {
+  return window.matchMedia("(max-width: 560px), (pointer: coarse)").matches;
+}
+
 function escapeHTML(value: string): string {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -78,7 +82,7 @@ function scrollBottom(): void {
 }
 
 function focusInput(): void {
-  if (!activeInput) return;
+  if (!activeInput || isMobileTerminal()) return;
   activeInput.focus({ preventScroll: true });
   placeCaretEnd(activeInput);
 }
@@ -105,15 +109,21 @@ function setCurrentCommand(text: string): void {
 function appendPrompt(): void {
   const row = document.createElement("div");
   row.className = "line input-line";
+  const mobile = isMobileTerminal();
+  const editable = mobile
+    ? `<span class="current-input mobile-disabled-input" aria-hidden="true"></span>`
+    : `<span class="current-input" contenteditable="true" spellcheck="false" autocapitalize="none" role="textbox" aria-label="Terminal command input"></span>`;
   row.innerHTML =
     `<span class="prompt">guest@loganmesh</span>` +
     `<span>:<span class="cwd">${state.cwd}</span>$&nbsp;</span>` +
-    `<span class="current-input" contenteditable="true" spellcheck="false" autocapitalize="none" role="textbox" aria-label="Terminal command input"></span>`;
+    editable;
   terminalScreen.appendChild(row);
   activeInput = row.querySelector(".current-input");
   activeInput!.textContent = "\u200B";
-  activeInput!.addEventListener("keydown", handleInputKeydown);
-  activeInput!.addEventListener("paste", handlePaste);
+  if (!mobile) {
+    activeInput!.addEventListener("keydown", handleInputKeydown);
+    activeInput!.addEventListener("paste", handlePaste);
+  }
   scrollBottom();
   focusInput();
 }
@@ -226,6 +236,11 @@ function help(): void {
 }
 
 function about(): void {
+  if (isMobileTerminal()) {
+    aboutMobile();
+    return;
+  }
+
   line(`${color("#", "faint")} ${color("Logan Mesh", "yellow")}`);
   line(`${color("role", "cyan")}         Incoming SWE Intern @ ${color("Bloomberg", "white")} | Math + CS @ ${color("UF", "orange")}`);
   line(`${color("interests", "cyan")}    Software engineering, quant dev & research, mathematics`);
@@ -255,6 +270,49 @@ function about(): void {
 
   line(`${color("##", "faint")} ${color("Projects", "yellow")}`);
   line(`${link("/projects/leantex", "LeanTeX")}                Convert proofs written in Lean 4 to natural language.`);
+  line("");
+
+  line(`${color("See more:", "green")}  ${cmdButton("projects")}  ${cmdButton("blog")}  ${cmdButton("contact")}`);
+}
+
+function aboutMobile(): void {
+  line(`${color("#", "faint")} ${color("Logan Mesh", "yellow")}`);
+  line(`Incoming SWE Intern @ ${color("Bloomberg", "white")}`);
+  line(`Math + CS @ ${color("UF", "orange")}`);
+  line(`Interested in coding, quant finance, mathematics`);
+  line(`${link("mailto:loganmesh91@gmail.com", "email")}  ${link("https://github.com/lmesh91", "github")}  ${link("https://www.linkedin.com/in/lmesh/", "linkedin")}`);
+  line("");
+
+  line(`${color("##", "faint")} ${color("Summary", "yellow")}`);
+  line("I am a sophomore seeking a math and computer science degree at the University of Florida.");
+  line("I love working on interesting problems at the intersection of math, computing, and/or finance.");
+  line("");
+
+  line(`${color("##", "faint")} ${color("Education", "yellow")}`);
+  line(`${color("University of Florida", "cyan")}`)
+  line(`Class of 2029, Math + CS double major`);
+  line(`${color("Honors", "cyan")} `)
+  line(`4.0 GPA, Dean's List, President's Honor Roll`);
+  line("");
+
+  line(`${color("##", "faint")} ${color("Experience", "yellow")}`);
+  line(`${color("Bloomberg", "cyan")}`)
+  line(`Software Engineering Intern, New York City`);
+  line("Professional software engineering in a high-throughput financial technology environment.");
+  line("");
+
+  line(`${color("##", "faint")} ${color("Awards", "yellow")}`);
+  line(`${color("Putnam", "cyan")}`)
+  line(`24 / 120, top 14% of participants`);
+  line(`${color("SCUDEM X", "cyan")}`);
+  line(`Outstanding Prize Winner team`);
+  line(`${color("M3 Challenge", "cyan")}`);
+  line(`Semifinalist team, top 2% of 655 US/UK teams`);
+  line("");
+
+  line(`${color("##", "faint")} ${color("Projects", "yellow")}`);
+  line(`${link("/projects/leantex", "LeanTeX")}`);
+  line(`Convert Lean 4 proofs to natural language.`);
   line("");
 
   line(`${color("See more:", "green")}  ${cmdButton("projects")}  ${cmdButton("blog")}  ${cmdButton("contact")}`);
@@ -405,10 +463,11 @@ document.addEventListener("click", (e) => {
     if (cmd) runClickedCommand(cmd);
     return;
   }
-  if (terminalScreen.contains(target)) focusInput();
+  if (!isMobileTerminal() && terminalScreen.contains(target)) focusInput();
 });
 
 terminalScreen.addEventListener("keydown", (e: KeyboardEvent) => {
+  if (isMobileTerminal()) return;
   if (!activeInput || document.activeElement === activeInput) return;
   if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter") {
     focusInput();
