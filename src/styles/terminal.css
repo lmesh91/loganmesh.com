@@ -379,6 +379,11 @@ kbd {
   padding: .35em 0;
 }
 
+.article-terminal-output {
+  min-height: 8rem;
+  padding-bottom: 2rem;
+}
+
 @media (max-width: 560px) {
   .shell {
     width: min(100% - 8px, 1440px);

@@ -31,6 +31,7 @@ const terminalData = JSON.parse(dataEl.textContent) as TerminalData;
 let commandHistory: string[] = [];
 let historyIndex = -1;
 let activeInput: HTMLElement | null = null;
+let terminalInitialized = false;
 
 const state = {
   cwd: "~/site",
@@ -132,18 +133,49 @@ function freezePrompt(commandText: string): void {
 function resetTerminal(command?: string): void {
   terminalScreen.innerHTML = "";
   activeInput = null;
-  line("Welcome to loganmesh.com.", "green");
-  line(`Type ${cmdButton("help")} or tap a command below.`, "dim");
-  blank();
+  if (terminalScreen.dataset.quietInit !== "true") {
+    line("Welcome to loganmesh.com.", "green");
+    line(`Type ${cmdButton("help")} or tap a command below.`, "dim");
+    blank();
+  }
   appendPrompt();
-  const commandToRun = command || "about";
-  setCurrentCommand(commandToRun);
-  executeCommand(commandToRun);
+  const commandToRun = command ?? terminalScreen.dataset.defaultCommand ?? "about";
+  if (commandToRun) {
+    setCurrentCommand(commandToRun);
+    executeCommand(commandToRun);
+  }
 }
 
 function initializeTerminal(): void {
+  if (terminalInitialized) return;
+  terminalInitialized = true;
   const initialCommand = new URLSearchParams(window.location.search).get("cmd") || undefined;
   resetTerminal(initialCommand);
+}
+
+function initializeWhenVisible(): void {
+  if (terminalScreen.dataset.deferInit !== "true") {
+    initializeTerminal();
+    return;
+  }
+
+  const scrollRoot = terminalScreen.closest<HTMLElement>(".screen") ?? document.documentElement;
+  const bottomThreshold = 16;
+
+  const isAtBottom = (): boolean => {
+    return scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - bottomThreshold;
+  };
+
+  const tryInitialize = (): void => {
+    if (!isAtBottom()) return;
+    scrollRoot.removeEventListener("scroll", tryInitialize);
+    initializeTerminal();
+  };
+
+  window.setTimeout(() => {
+    scrollRoot.addEventListener("scroll", tryInitialize, { passive: true });
+    tryInitialize();
+  }, 600);
 }
 
 function renderCommandPalette(): void {
@@ -156,7 +188,6 @@ function renderCommandPalette(): void {
       cmdButton("blog"),
       cmdButton("contact"),
       cmdButton("clear"),
-      cmdButton("reboot"),
     ].join("  "),
     "command-palette",
   );
@@ -171,9 +202,10 @@ function help(): void {
     ["about", "print a message about myself"],
     ["projects", "list project entries"],
     ["blog", "list blog post entries"],
-    ["open [project]", "preview a project or blog post"],
+    ["open [slug]", "open a project or blog page"],
     ["contact", "show contact links"],
     ["clear", "clear terminal"],
+    ["reboot", "reset terminal"],
   ];
 
   for (const [cmd, desc] of rows) {
@@ -262,23 +294,16 @@ function findEntry(slug: string): TerminalItem | undefined {
   return [...terminalData.projects, ...terminalData.blog].find((item) => item.slug === slug);
 }
 
-function openEntry(slug: string): void {
+function openEntry(slug: string): boolean {
   const item = findEntry(slug);
   if (!item) {
     line(`open: no project or blog slug '${escapeHTML(slug || "")}'`, "red");
     line(`Try ${cmdButton("projects")} or ${cmdButton("blog")}.`, "dim");
-    return;
+    return false;
   }
 
-  line(`# ${escapeHTML(item.title)}`, "yellow");
-  line(`type:     ${item.type}`);
-  if (item.date) line(`date:     ${escapeHTML(item.date)}`);
-  if (item.status) line(`status:   ${escapeHTML(item.status)}`);
-  line(`tags:     ${escapeHTML(item.tags.join(", ") || "none")}`);
-  line("");
-  line(escapeHTML(item.description));
-  line("");
-  line(`full:     ${link(item.url, item.url)}`);
+  window.location.assign(item.url);
+  return true;
 }
 
 function contact(): void {
@@ -328,8 +353,11 @@ function executeCommand(raw: string): void {
       activeInput = null;
       renderCommandPalette();
       break;
+    case "reboot":
+      resetTerminal();
+      return;
     case "open":
-      openEntry(parts[1] ?? "");
+      if (openEntry(parts[1] ?? "")) return;
       break;
     default:
       unknown(cmd);
@@ -340,6 +368,7 @@ function executeCommand(raw: string): void {
 }
 
 function runClickedCommand(cmd: string): void {
+  if (!terminalInitialized) return;
   if (!activeInput) appendPrompt();
   setCurrentCommand(cmd);
   executeCommand(cmd);
@@ -386,4 +415,4 @@ terminalScreen.addEventListener("keydown", (e: KeyboardEvent) => {
   }
 });
 
-initializeTerminal();
+initializeWhenVisible();
