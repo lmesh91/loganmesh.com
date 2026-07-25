@@ -242,7 +242,7 @@ function about(): void {
   }
 
   line(`${color("#", "faint")} ${color("Logan Mesh", "yellow")}`);
-  line(`${color("role", "cyan")}         Incoming SWE Intern @ ${color("Bloomberg", "white")} | Math + CS @ ${color("UF", "orange")}`);
+  line(`${color("role", "cyan")}         SWE Intern @ ${color("Bloomberg", "white")} | Math + CS @ ${color("UF", "orange")}`);
   line(`${color("interests", "cyan")}    Software engineering, quant dev & research, mathematics`);
   line(`${color("contact", "cyan")}      ${link("mailto:loganmesh91@gmail.com", "loganmesh91@gmail.com")}  ${link("https://github.com/lmesh91", "github.com/lmesh91")}  ${link("https://www.linkedin.com/in/lmesh/", "linkedin.com/in/lmesh")}`);
   line("");
@@ -277,7 +277,7 @@ function about(): void {
 
 function aboutMobile(): void {
   line(`${color("#", "faint")} ${color("Logan Mesh", "yellow")}`);
-  line(`Incoming SWE Intern @ ${color("Bloomberg", "white")}`);
+  line(`SWE Intern @ ${color("Bloomberg", "white")}`);
   line(`Math + CS @ ${color("UF", "orange")}`);
   line(`Interested in coding, quant finance, mathematics`);
   line(`${link("mailto:loganmesh91@gmail.com", "email")}  ${link("https://github.com/lmesh91", "github")}  ${link("https://www.linkedin.com/in/lmesh/", "linkedin")}`);
